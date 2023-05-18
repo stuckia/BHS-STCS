@@ -1,0 +1,10 @@
+0,noun6,gloss6
+1,noun1,gloss1
+2,noun2,gloss2
+3,noun3,gloss3
+4,noun4,gloss4
+5,noun5,gloss5
+6,noun0,gloss0
+7,noun7,gloss7
+8,noun8,gloss8
+9,noun9,gloss9

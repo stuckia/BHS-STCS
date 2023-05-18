@@ -1,0 +1,4 @@
+pig
+chicken
+computer
+dog

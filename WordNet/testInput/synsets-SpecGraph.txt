@@ -1,0 +1,5 @@
+0,E,E gloss
+1,C,C gloss
+2,D,D gloss
+3,A,A gloss
+4,B,B gloss
