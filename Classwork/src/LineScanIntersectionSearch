@@ -1,0 +1,230 @@
+import java.util.ArrayList;
+
+public class LineScanIntersectionSearch
+{
+	// Abstract super class for horizontal and vertical line segments
+	private static abstract class HVLine
+	{
+		private int x;
+		private int y;
+		private int length;
+
+		public HVLine(int xP, int yP, int lengthP)
+		{
+			x = xP;
+			y = yP;
+			length = lengthP;
+		}
+
+		public int getX() { return x; }
+		public int getY() { return y; }
+		public int getLength() { return length; }
+
+		abstract public void draw();
+	}
+
+	// Represents a horizontal line segment
+	private static class HLine extends HVLine
+	{
+		public HLine(int xP, int yP, int lengthP)
+		{
+			super(xP, yP, lengthP);
+		}
+
+		public void draw()
+		{
+			StdDraw.line(getX(), getY(), getX() + getLength(), getY());
+		}
+	}
+
+	// Represents a vertical line segment
+	private static class VLine extends HVLine
+	{
+		public VLine(int xP, int yP, int lengthP)
+		{
+			super(xP, yP, lengthP);
+		}
+
+		public void draw()
+		{
+			StdDraw.line(getX(), getY(), getX(), getY() + getLength());
+		}
+	}
+
+	// Represents an event as the scan line approaches a given x coordinate.
+	// Instances of this class are stored in the lineEvents PQ
+	private static class LineEvent implements Comparable<LineEvent>
+	{
+		// Special numbers to describe what kind of event
+		// a given instance represents
+		static final int HLINE_LEFT = 0;	// Left endpoint of HLine
+		static final int HLINE_RIGHT = 1;	// Right endpoint of HLine
+		static final int VLINE = 2;			// A VLine
+
+		private int type;       // One of the above 3 values
+
+		private int x;          // x-coord (valid for all types)         
+		private int y;          // y-coord (valid for all types)
+		private int yTop;       // y-coord at top of VLine (valid only for VLINE type)
+
+		public LineEvent(int xP, int yP, int typeP)
+		{
+			this (xP, yP, -1 /* unused */, typeP);
+		}
+
+		public LineEvent(int xP, int yP, int yTopP, int typeP)
+		{
+			x = xP;
+			y = yP;
+			yTop = yTopP;
+			type = typeP;
+		}
+
+		public int compareTo(LineEvent that)
+		{
+			return this.x - that.x;
+		}
+	}
+
+	// Represents a single point in the plane
+	private static class Point
+	{
+		private int x;
+		private int y;
+
+		public Point(int xP, int yP)
+		{
+			x = xP;
+			y = yP;
+		}
+	}
+
+	// Entire line sweep algorithm + drawing
+	public static void main(String[] args)
+	{
+		final int NUM_LINES = 75;
+		final double SCALE = 200;
+
+		StdDraw.setCanvasSize(1000, 1000);
+		StdDraw.setXscale(0, SCALE);
+		StdDraw.setYscale(0, SCALE);
+
+		ArrayList<HVLine> allLines = new ArrayList<HVLine>();
+
+		// Priority queue containing all the events the scan
+		// line will encounter: HLine left endpoint, HLine right
+		// endpoint, and VLine.
+		//
+		// The priority queue will dequeue events ordered by
+		// their x-coordinate
+		MinPQ<LineEvent> lineEvents = new MinPQ<LineEvent>();
+
+		// Generate random segments
+		for (int i=0; i < NUM_LINES; i++)
+		{
+			boolean isHorizontal = Math.random() < 0.5;
+			int x = (int) (Math.random() * SCALE);
+			int y = (int) (Math.random() * SCALE);
+			int length = (int) (Math.random() * SCALE);
+
+			HVLine hvLine = isHorizontal ? new HLine(x, y, length) : new VLine(x, y, length);
+
+			if (isHorizontal)
+			{
+				// Horizontal lines have two events: one for each endpoint
+				lineEvents.insert(new LineEvent(x, y, LineEvent.HLINE_LEFT));
+				lineEvents.insert(new LineEvent(x + length, y, LineEvent.HLINE_RIGHT));
+			}
+			else
+			{
+				// Vertical lines have a single event for when the scan line touches it
+				lineEvents.insert(new LineEvent(x, y, y + length, LineEvent.VLINE));
+			}
+
+			// For animation purposes, keep track of all lines so
+			// we can redraw them for each frame
+			allLines.add(hvLine);
+		}
+
+		// Perform scan
+
+		// When you detect an intersection, add the Point of
+		// intersection into this ArrayList
+		ArrayList<Point> intersections = new ArrayList<Point>();
+
+		// You will add y-coordinates to this BST as per the algorithm.
+		// The key for each item in this BST is the y-coordinate of
+		// the event that the scan line encountered, and
+		// the value is the LineEvent itself
+		BST<Integer, LineEvent> bst = new BST<Integer, LineEvent>();
+
+		// Prime the loop by grabbing the first event
+		LineEvent nextEvent = lineEvents.delMin();
+		System.out.println("next event x = " + nextEvent.x);
+
+		// Loop through every possible x value, comparing against
+		// the next event
+		for (int x=0; x < SCALE; x++)
+		{
+			while (x == nextEvent.x)
+			{
+				// ****************************************************
+				// TODO: ADD CODE TO IMPLEMENT THE LINE-SWEEP ALGORITHM
+				//
+				// This for-loop sweeps from left to right.  If the
+				// current x-coordinate matches nextEvent,
+				// then do the following, based on nextEvent.type:
+				//
+				// Right endpoint of an HLine: remove y-coordinate
+				//		from the bst
+				if(nextEvent.type == LineEvent.HLINE_RIGHT)
+				{
+					bst.delete(nextEvent.y);
+				}
+				// Left endpoint of an HLine: insert y-coordinate (and
+				//		the event) into the bst
+				else if(nextEvent.type == LineEvent.HLINE_LEFT)
+				{
+					bst.put(nextEvent.y, nextEvent);
+				}
+				// VLine: Range-search the BST for all y-coordinates
+				//		that fall in the range for the VLine.  Each
+				//		one identifies an intersection point.  Add
+				//		all such points to the intersections ArrayList.
+				//
+				// ****************************************************
+				else
+				{
+					for(int key : bst.keys(nextEvent.y, nextEvent.yTop))
+					{
+						intersections.add(new Point(x, key));
+					}
+				}
+				
+
+				// Done with this event, so get next event ready
+				nextEvent = lineEvents.delMin();
+				System.out.println("next event x = " + nextEvent.x);
+			}            	
+
+			// Redraw
+
+			StdDraw.clear();
+			StdDraw.setPenRadius(0.0062);
+
+			StdDraw.setPenColor(StdDraw.BLACK); // HV lines
+			for (HVLine line : allLines)        
+			{
+				line.draw();
+			}
+			StdDraw.setPenColor(StdDraw.RED);   // intersections
+			for (Point point : intersections)
+			{
+				StdDraw.circle(point.x, point.y, SCALE / 100);
+			}
+			StdDraw.setPenColor(StdDraw.BLUE);  // scan line
+			StdDraw.line(x, 0, x, SCALE + 1);
+			StdDraw.show(10);
+		}
+	}
+}

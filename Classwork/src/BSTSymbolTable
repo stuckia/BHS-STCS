@@ -1,0 +1,524 @@
+import java.util.NoSuchElementException;
+
+public class BSTSymbolTable
+{
+	private Node root;
+	
+	public BSTSymbolTable()
+	{
+		root = null;
+	}
+	
+    private class Node
+    {
+    	private String key;
+        private String value;
+        Node left;
+        Node right;
+        
+        public Node(String key, String value)
+        {
+            this.key = key;
+            this.value = value;
+            left = null;
+            right = null;
+        }
+        
+        public Node()
+        {
+        	this.key = null;
+        	this.value = null;
+        	left = null;
+        	right = null;
+        }
+    }
+    
+    public void insert(String key, String value)
+    {
+    	Node newNode = new Node(key, value);
+    	insert(root, newNode);
+    }
+    
+    private void insert(Node current, Node newNode)
+	{
+		//checks precondition
+		if(root == null)
+		{
+		    root = newNode;
+		}
+		else if(current != null && newNode != null)
+		{
+			if(newNode.key.compareTo(current.key) < 0)
+	  		{
+	   			if(current.left == null)
+	   			{
+	   				current.left = newNode;
+	   			}
+	   			else
+	   			{
+	   				insert(current.left, newNode);
+	   			}
+	   		}
+	   		else if(newNode.key.compareTo(current.key) > 0)
+	   		{
+	   			if(current.right == null)
+	   			{
+	   				current.right = newNode;
+	   			}
+	   			else
+	   			{
+	   				insert(current.right, newNode);
+	   			}
+	   		}
+		}
+	}
+    
+    public String search(String keyToSearch)
+    {
+    	return search(root, keyToSearch);
+    }
+    
+    private String search(Node current, String key)
+	{
+		String returnValue = null;
+		
+		if(current != null)
+		{
+			//do find of the left of current
+			if(key.compareTo(current.key) < 0)
+			{
+				returnValue = search(current.left, key);
+			}
+			//do find of the right of current
+			else if(key.compareTo(current.key) > 0)
+			{
+				returnValue = search(current.right, key);
+			}
+			else
+			{
+				returnValue = current.value;
+			}
+		}
+		
+		return returnValue;
+	}
+    
+    public Node find(String keyToFind)
+    {
+    	return find(root, keyToFind);
+    }
+    
+    private Node find(Node current, String key)
+    {
+    	Node returnValue = null;
+		
+		if(current != null)
+		{
+			//do find of the left of current
+			if(key.compareTo(current.key) < 0)
+			{
+				returnValue = find(current.left, key);
+			}
+			//do find of the right of current
+			else if(key.compareTo(current.key) > 0)
+			{
+				returnValue = find(current.right, key);
+			}
+			else
+			{
+				returnValue = current;
+			}
+		}
+		
+		return returnValue;
+    }
+    
+    private Node findParent(Node current, Node child)
+    {
+    	Node parent = null;
+    	
+    	if(current != null)
+    	{
+    		if(current.key.compareTo(child.key) < 0)
+    		{
+    			if(current.left == child)
+    			{
+    				parent = current;
+    			}
+    			else
+    			{
+    				parent = findParent(current.left, child);
+    			}
+    		}
+    		else if(current.key.compareTo(child.key) > 0)
+    		{
+    			if(current.right == child)
+    			{
+    				parent = current;
+    			}
+    			else
+    			{
+    				parent = findParent(current.right, child);
+    			}
+    		}
+    		else
+    		{
+    			parent = null;
+    		}
+    	}
+    	
+    	return parent;
+    }
+    
+    public void delete(String keyToDelete)
+    {
+    	delete(find(keyToDelete));
+    }
+    
+    private void delete(Node nodeToDelete)
+    {
+    	Node parentOfNTD = findParent(root, nodeToDelete);
+    	
+    	//nodeToDelete has NO CHILDREN
+    	if(nodeToDelete.left == null && nodeToDelete.right == null)
+    	{
+    		//nodeToDelete is the root
+    		if(nodeToDelete == root)
+    		{
+    			root = null;
+    		}
+    		//nodeToDelete is to the left of its parent
+    		else if(parentOfNTD.left == nodeToDelete)
+    		{
+      			parentOfNTD.left = null;
+    		}
+    		//nodeToDelete is to the right of its parent
+    		else
+    		{
+    			parentOfNTD.right = null;
+    		}
+    	}
+    	//nodeToDelete has children ONLY to the RIGHT
+    	else if(nodeToDelete.left == null)
+    	{   		
+    		if(nodeToDelete == root)
+    		{
+    			root = nodeToDelete.right;
+    		}
+    		else
+    		{
+    			if(parentOfNTD.right == nodeToDelete)
+    			{
+    				parentOfNTD.right = nodeToDelete.right;
+    			}
+    			else if(parentOfNTD.left == nodeToDelete)
+    			{
+    				parentOfNTD.left = nodeToDelete.right;
+    			}
+    		}
+    	}
+    	//nodeToDelete has children ONLY to the LEFT
+    	else if(nodeToDelete.right == null)
+    	{
+    		if(nodeToDelete == root)
+    		{
+    			root = nodeToDelete.left;
+    		}
+    		else
+    		{
+    			if(parentOfNTD.right == nodeToDelete)
+    			{
+    				parentOfNTD.right = nodeToDelete.left;
+    			}
+    			else if(parentOfNTD.left == nodeToDelete)
+    			{
+    				parentOfNTD.left = nodeToDelete.left;
+    			}
+    		}
+    	}
+    	//nodeToDelete has children on BOTH SIDES
+    	else
+    	{    		
+    		if(nodeToDelete.left.right == null)
+    		{
+    			if(parentOfNTD.left == nodeToDelete)
+    			{
+    				parentOfNTD.left = nodeToDelete.left.right;
+    				
+    			}
+    		}
+    		else
+    		{
+    			Node minNode = getMinNode(nodeToDelete.right);
+        		Node minNodeParent = findParent(root, minNode);
+        		
+        		nodeToDelete.value = minNode.value;
+        		minNodeParent.left = parentOfNTD.right;
+    		}
+    	}
+    }
+  	
+	//return total size of the tree (DO NOT USE AN INSTANCE FIELD FOR SIZE)
+	public int size()
+	{
+		return size(root);
+	}
+	
+	private int size(Node node)
+	{
+		if(node == null)
+		{
+			return 0;
+		}
+		
+		int leftSize = size(node.left);
+		int rightSize = size(node.right);
+		
+		return (1 + leftSize + rightSize);
+	}
+	
+	//find the height of the tower
+		public int height()
+		{
+			return height(root);
+		}
+		
+		private int height(Node node)
+		{
+			if(node == null)
+			{
+				return 0;
+			}
+			
+			int theHeight = 1;
+			if(node.left != null)
+			{
+				theHeight += height(node.left);
+			}
+			else if(node.right != null)
+			{
+				theHeight += height(node.right);
+			}
+			
+			return theHeight;
+		}
+    
+  	private Node getMinNode(Node node)
+  	{
+  		Node minNode = null;
+  		if(node != null)
+  		{
+  			if(node.left != null)
+  			{
+  				minNode = getMinNode(node.left);
+  			}
+  			else
+  			{
+  				minNode = node;
+  			}
+  		}
+  		
+  		return minNode;
+  	}
+    
+    public String rangeSearch(String keyStart, String keyEnd)
+    {
+    	return rangeSearch(keyStart, keyEnd, root);
+    }
+    
+    private String rangeSearch(String start, String end, Node current)
+    {
+    	String str = "";
+    	if(current != null)
+    	{
+    		if(start.compareTo(current.key) >= 0 && end.compareTo(current.key) <= 0)
+    		{
+    			str += current.value + " ";
+    		}
+    		
+    		if(start.compareTo(current.key) < 0)
+    		{
+    			str += rangeSearch(start, end, current.left);
+    		}
+    		
+    		if(end.compareTo(current.key) > 0)
+    		{
+    			str += rangeSearch(start, end, current.right);
+    		}
+    	}
+    	
+    	return str;
+    }
+    
+    public int rangeCount(String keyStart, String keyEnd)
+    {
+    	return rangeCount(keyStart, keyEnd, root);
+    }
+    
+    private int rangeCount(String start, String end, Node current)
+    {
+    	int count = 0;
+    	
+    	if(current != null)
+    	{
+    		if(start.compareTo(current.key) >= 0 && end.compareTo(current.key) <= 0)
+    		{
+    			count++;
+    		}
+    		
+    		if(start.compareTo(current.key) < 0)
+    		{
+    			count += rangeCount(start, end, current.left);
+    		}
+    		
+    		if(end.compareTo(current.key) > 0)
+    		{
+    			count += rangeCount(start, end, current.right);
+    		}
+    	}
+    	
+    	return count;
+    }
+    
+   // Your find method
+    public void printKeys()
+	{
+		printKeys(root);
+	}
+	
+	private void printKeys(Node node)
+	{
+		if(node != null)
+		{
+			if(node.left != null)
+			{
+				printKeys(node.left);
+			}
+			
+			System.out.println(node.key);
+			
+			if(node.right != null)
+			{
+				printKeys(node.right);
+			}
+		}
+	}
+	
+	//return lowest key
+	public String min()
+	{
+		return min(root);
+	}
+	
+	private String min(Node node)
+	{
+		String minKey = null;
+		if(node != null)
+		{
+			if(node.left != null)
+			{
+				minKey = min(node.left);
+			}
+			else
+			{
+				minKey = node.key;
+			}
+		}
+		
+		return minKey;
+	}
+	
+	//return highest key
+	public String max()
+	{
+		return max(root);
+	}
+	
+	private String max(Node node)
+	{
+		String maxKey = null;
+		if(node != null)
+		{
+			if(node.right != null)
+			{
+				maxKey = max(node.right);
+			}
+			else
+			{
+				maxKey = node.key;
+			}
+		}
+		
+		return maxKey;
+	}
+	
+	//gets largest key that is less than or equal to the given key
+	public String floor(String key)
+	{
+		return floor(root, key);
+	}
+	
+	private String floor(Node node, String key)
+	{
+		if(key == null)
+		{
+			throw new IllegalArgumentException("one value was null");
+		}
+		
+		String floored = null;
+		if(node == null)
+		{
+		    floored = null;
+		}
+		else if(key.compareTo(node.key) < 0)
+		{
+			floored = floor(node.left, key);
+		}
+		else if(key.compareTo(node.key) == 0)
+		{
+			floored = node.key;
+		}
+		else if(null != floor(node.right, key))
+		{
+			floored = floor(node.right, key);
+		}
+		else
+		{
+			floored = node.key;
+		}
+		
+		return floored;
+	}
+
+	//return num of keys <= T key
+	public int rank(String key)
+	{
+		return rank(key, root);
+	}
+	
+	private int rank(String key, Node node)
+	{
+		int count = 0;
+		if (node == null)
+		{
+			return count;
+		}
+		
+		if(key.compareTo(node.key) > 0)
+		{
+			count = 1 + rank(key, node.right)+ size(node.left);
+		}
+		else if(key.compareTo(node.key) < 0)
+		{
+			count = rank(key, node.left);
+		}
+		else
+		{
+			count = 1 + size(node.left);
+		}
+		return count;
+	}
+}
+
+
+
